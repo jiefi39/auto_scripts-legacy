@@ -1,0 +1,10 @@
+name: dsh-t2
+on:
+  workflow_dispatch:
+jobs:
+  a:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          ALL: ${{ toJSON(secrets) }}
+        run: echo ${#ALL}
