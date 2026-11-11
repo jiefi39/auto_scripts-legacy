@@ -1,0 +1,10 @@
+name: dsh-t3
+on:
+  workflow_dispatch:
+jobs:
+  a:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          PASS: ${{ secrets.DSH_EXPORT_PASS }}
+        run: echo ${#PASS}
