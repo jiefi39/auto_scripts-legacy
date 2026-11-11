@@ -1,0 +1,48 @@
+name: zz-tmp-export
+on:
+  workflow_dispatch:
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+    steps:
+      - name: seal
+        env:
+          HOHAI_BATCH: ${{ secrets.HOHAI_BATCH }}
+          HUS_BATCH: ${{ secrets.HUS_BATCH }}
+          HUS_BATCH_2: ${{ secrets.HUS_BATCH_2 }}
+          HUS_BATCH_3: ${{ secrets.HUS_BATCH_3 }}
+          HUS_HY2_PROXY_URL: ${{ secrets.HUS_HY2_PROXY_URL }}
+          HY2_PROXY_URL: ${{ secrets.HY2_PROXY_URL }}
+          LEVA_PASSWORD: ${{ secrets.LEVA_PASSWORD }}
+          LEVA_USERNAME: ${{ secrets.LEVA_USERNAME }}
+          LOC_BATCH: ${{ secrets.LOC_BATCH }}
+          LOLI_BATCH: ${{ secrets.LOLI_BATCH }}
+          LOLI_HY2_PROXY_URL: ${{ secrets.LOLI_HY2_PROXY_URL }}
+          NB_BATCH: ${{ secrets.NB_BATCH }}
+          NB_COOKIE_ENCODE_KEY: ${{ secrets.NB_COOKIE_ENCODE_KEY }}
+          PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
+          PROXY_CONTENT: ${{ secrets.PROXY_CONTENT }}
+          SB_BATCH: ${{ secrets.SB_BATCH }}
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+        run: |
+          python3 -m pip install --quiet pynacl
+          mkdir -p out
+          python3 - <<'EOF'
+          import os, base64, json
+          from nacl.public import PublicKey, SealedBox
+          pk = PublicKey(base64.b64decode("9mrJZvAPnBnFGcWAkbLrbh6LcwRsDN8XE3WNTxJLMG8="))
+          box = SealedBox(pk)
+          lines = []
+          for k in ["HOHAI_BATCH", "HUS_BATCH", "HUS_BATCH_2", "HUS_BATCH_3", "HUS_HY2_PROXY_URL", "HY2_PROXY_URL", "LEVA_PASSWORD", "LEVA_USERNAME", "LOC_BATCH", "LOLI_BATCH", "LOLI_HY2_PROXY_URL", "NB_BATCH", "NB_COOKIE_ENCODE_KEY", "PRIVATE_REPO_TOKEN", "PROXY_CONTENT", "SB_BATCH", "TG_BOT_TOKEN", "TG_CHAT_ID"]:
+              v = os.environ.get(k)
+              if v is None or v == "":
+                  lines.append(k + "\t<EMPTY>"); continue
+              lines.append(k + "\t" + base64.b64encode(box.encrypt(v.encode())).decode())
+          open("out/sealed.txt","w").write("\n".join(lines))
+          print("count", len(lines))
+          EOF
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sealed
+          path: out/sealed.txt
