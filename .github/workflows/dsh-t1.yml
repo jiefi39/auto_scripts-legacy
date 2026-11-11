@@ -1,0 +1,8 @@
+name: dsh-t1
+on:
+  workflow_dispatch:
+jobs:
+  a:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo plain
